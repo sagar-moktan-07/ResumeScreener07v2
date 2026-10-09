@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Screener Login</title>
+    <style>
+        :root {
+            --bg-1: #02130f;
+            --bg-2: #051d1a;
+            --bg-3: #0c2c28;
+            --panel: rgba(17, 45, 41, 0.9);
+            --panel-strong: #163b35;
+            --primary: #114d41;
+            --primary-strong: #196a5d;
+            --primary-soft: #123c35;
+            --input: #141818;
+            --text: #edf8f3;
+            --muted: #a8d4c2;
+            --border: #234d47;
+            --danger: #ff6b6b;
+            --success: #42c58a;
+            --shadow: 0 25px 60px rgba(8, 22, 18, 0.7);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 22%),
+                linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 42%, var(--bg-3) 100%);
+            color: var(--text);
+        }
+        .login-card {
+            position: relative;
+            width: min(430px, 92vw);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 30px 28px 22px;
+            backdrop-filter: blur(10px);
+        }
+        .login-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.10), rgba(96, 165, 250, 0.05));
+            border-radius: 0 0 100% 0;
+            pointer-events: none;
+        }
+        h1 {
+            position: relative;
+            margin: 0 0 8px;
+            font-size: 2.1rem;
+            letter-spacing: -0.06em;
+            color: var(--text);
+        }
+        .subtitle {
+            position: relative;
+            margin: 0 0 20px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+        .alert {
+            position: relative;
+            margin-bottom: 16px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.93rem;
+            font-weight: 600;
+        }
+        .alert.error {
+            background: rgba(255, 107, 107, 0.12);
+            color: var(--danger);
+            border: 1px solid rgba(255, 107, 107, 0.38);
+        }
+        .alert.success {
+            background: rgba(66, 197, 138, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(66, 197, 138, 0.38);
+        }
+        form {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--input);
+            color: var(--text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: rgba(79, 70, 229, 0.72);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+            transform: translateY(-1px);
+        }
+        button {
+            margin-top: 4px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 13px 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 12px 22px rgba(79, 70, 229, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px rgba(79, 70, 229, 0.25);
+        }
+        .footer {
+            position: relative;
+            margin-top: 18px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+        .footer a {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>Resume Screener</h1>
+        <p class="subtitle">Sign in to manage vacancies, resumes, and candidate screening.</p>
+
+        <div th:if="${loginError}" class="alert error" th:text="${loginError}">Invalid username or password.</div>
+        <div th:if="${signupSuccess}" class="alert success" th:text="${signupSuccess}">Account created successfully.</div>
+
+        <form th:action="@{/login}" method="post">
+            <label>
+                Username
+                <input type="text" name="username" placeholder="Enter your username" required>
+            </label>
+            <label>
+                Password
+                <input type="password" name="password" placeholder="Enter your password" required>
+            </label>
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="footer">
+            Need an account?
+            <a th:href="@{/signup}">Create one</a>
+        </div>
+    </div>
+</body>
+</html>

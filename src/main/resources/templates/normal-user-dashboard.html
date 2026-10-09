@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Portal</title>
+    <style>
+        :root {
+            --bg: #03110e;
+            --panel: #112d29;
+            --panel-strong: #163a35;
+            --muted: #b1d0c4;
+            --text: #edf8f3;
+            --border: #234d47;
+            --primary: #114d41;
+            --primary-strong: #196a5d;
+            --primary-soft: #123c35;
+            --success: #42c58a;
+            --danger: #ff6b6b;
+            --input: #141818;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Inter, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--panel);
+        }
+        h1 { margin: 0; font-size: 1.5rem; }
+        .nav-link {
+            text-decoration: none;
+            color: var(--text);
+            background: var(--primary-soft);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        main {
+            max-width: 1100px;
+            margin: 28px auto;
+            padding: 0 16px 40px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }
+        .upload-box {
+            border: 1.5px dashed var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            background: var(--panel-strong);
+        }
+        input[type="file"] {
+            display: block;
+            margin: 14px auto;
+            max-width: 260px;
+        }
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .status {
+            margin-top: 12px;
+            color: var(--muted);
+            min-height: 22px;
+            font-size: 0.92rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        th, td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .empty {
+            color: var(--muted);
+            font-style: italic;
+        }
+        .notice {
+            margin-bottom: 16px;
+            padding: 10px 12px;
+            background: rgba(31, 107, 86, 0.18);
+            border: 1px solid rgba(31, 107, 86, 0.45);
+            border-radius: 10px;
+            color: var(--success);
+            font-weight: 700;
+        }
+        .status-box {
+            margin: 4px 0 18px;
+            padding: 12px 14px;
+            background: rgba(17, 77, 65, 0.22);
+            border: 1px solid rgba(31, 107, 86, 0.45);
+            border-radius: 12px;
+            color: var(--text);
+            font-weight: 700;
+        }
+        .vacancy-panel {
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            background: var(--panel-strong);
+            border-radius: 14px;
+            padding: 18px;
+        }
+        .vacancy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .vacancy-box {
+            background: rgba(26, 29, 29, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .apply-btn {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .apply-btn.applied {
+            background: linear-gradient(135deg, rgba(66, 197, 138, 0.35), rgba(31, 107, 86, 0.6));
+            color: var(--text);
+            border: 1px solid rgba(66, 197, 138, 0.45);
+            cursor: default;
+        }
+        .apply-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .vacancy-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .vacancy-code {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(31, 107, 86, 0.18);
+            color: var(--text);
+            border: 1px solid rgba(31, 107, 86, 0.5);
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            letter-spacing: 0.04em;
+        }
+        .open-badge {
+            background: rgba(66, 197, 138, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(66, 197, 138, 0.4);
+            border-radius: 999px;
+            padding: 5px 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .vacancy-box h3 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+        .vacancy-meta {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        .vacancy-summary {
+            margin: 0;
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 0.92rem;
+        }
+        .selection-message {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(31, 107, 86, 0.14);
+            color: var(--text);
+            border: 1px solid rgba(31, 107, 86, 0.45);
+            font-weight: 700;
+            min-height: 42px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Candidate Portal</h1>
+        <a class="nav-link" href="/logout">Logout</a>
+    </header>
+
+    <main>
+        <div class="card">
+            <div th:if="${hasUploadedResume}" class="notice">
+                Your resume is already uploaded and stored. Only one PDF per user is allowed.
+            </div>
+
+            <div th:unless="${hasUploadedResume}" class="upload-box">
+                <h2>Upload your resume</h2>
+                <p style="margin: 0; color: var(--muted);">Upload your PDF resume. Your information will be parsed and shown in the table below.</p>
+                <input type="file" id="resumeFile" accept="application/pdf">
+                <button type="button" id="uploadBtn">Upload PDF</button>
+                <div id="status" class="status">No file uploaded yet.</div>
+            </div>
+
+            <div th:if="${hasUploadedResume}" class="status-box">
+                <span th:switch="${candidateStatus != null ? candidateStatus : 'uploaded'}">
+                    <span th:case="'approved'">Approved. Our team will contact you very soon...</span>
+                    <span th:case="'rejected'">Sorry. You have not been selected...</span>
+                    <span th:case="*">In process</span>
+                </span>
+            </div>
+ 
+            <h2 style="margin-top: 24px;">Open vacancies</h2>
+            <div class="vacancy-panel">
+                <div class="vacancy-grid" th:if="${vacancies != null and !#lists.isEmpty(vacancies)}">
+                    <div class="vacancy-box" th:each="vacancy : ${vacancies}">
+                        <div class="vacancy-header">
+                            <span class="vacancy-code" th:text="${vacancy.vacancyCode != null ? vacancy.vacancyCode : 'VAC-' + #numbers.formatInteger(vacancy.id, 3)}">VAC-001</span>
+                            <span class="open-badge">Open</span>
+                        </div>
+                        <h3 th:text="${vacancy.jobTitle}">Role Title</h3>
+                        <p class="vacancy-meta" th:text="${vacancy.department != null ? vacancy.department : 'Department not specified'}">Department</p>
+                        <p class="vacancy-summary" th:text="${vacancy.requiredSkills != null ? vacancy.requiredSkills : 'Requirements will be shared in the detailed role description.'}">Skills</p>
+                        <button type="button"
+                                class="apply-btn"
+                                th:attr="data-vacancy-id=${vacancy.id}, data-vacancy-code=${vacancy.vacancyCode != null ? vacancy.vacancyCode : 'VAC-' + #numbers.formatInteger(vacancy.id, 3)}">
+                            Select vacancy
+                        </button>
+                    </div>
+                </div>
+                <div th:if="${vacancies == null or #lists.isEmpty(vacancies)}" class="empty" style="padding-top: 8px;">
+                    No open vacancies are available right now.
+                </div>
+            </div>
+            <div id="selectedVacancyMessage" class="selection-message" aria-live="polite"></div>
+
+            <table style="margin-top: 28px;">
+                <thead>
+                    <tr>
+                        <th>Candidate ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Skills</th>
+                        <th>Qualifications</th>
+                        <th>Experience</th>
+                        <th>File name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${candidate == null}">
+                        <td colspan="8" class="empty">No candidate information uploaded yet.</td>
+                    </tr>
+                    <tr th:if="${candidate != null}">
+                        <td th:text="${candidate.displayCode}">CAN-0001</td>
+                        <td th:text="${candidate.fullName != null ? candidate.fullName : 'Not parsed'}">Name</td>
+                        <td th:text="${candidate.email != null ? candidate.email : '-'}">email@example.com</td>
+                        <td th:text="${candidate.phone != null ? candidate.phone : '-'}">0000000000</td>
+                        <td th:text="${candidate.skills != null ? candidate.skills : 'Not available'}">Skills</td>
+                        <td th:text="${candidate.qualifications != null ? candidate.qualifications : 'Not available'}">Qualifications</td>
+                        <td th:text="${candidate.experience != null ? candidate.experience : 'Not available'}">Experience</td>
+                        <td th:text="${candidate.fileName != null ? candidate.fileName : '-'}">resume.pdf</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resumeFile = document.getElementById('resumeFile');
+        const statusEl = document.getElementById('status');
+
+        if (uploadBtn && resumeFile) {
+            uploadBtn.addEventListener('click', async () => {
+                if (!resumeFile.files || resumeFile.files.length === 0) {
+                    statusEl.textContent = 'Please select one PDF file.';
+                    return;
+                }
+
+                const file = resumeFile.files[0];
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    statusEl.textContent = 'Only PDF files are allowed.';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('files', file);
+                statusEl.textContent = 'Uploading and parsing your resume...';
+
+                try {
+                    const response = await fetch('/api/resumes/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || data.stored === 0) {
+                        throw new Error(data.message || 'Upload failed');
+                    }
+
+                    statusEl.textContent = data.message || 'Upload successful.';
+                    window.location.reload();
+                } catch (error) {
+                    statusEl.textContent = error.message || 'Upload failed. Please try again.';
+                }
+            });
+        }
+
+        const selectedVacancyMessage = document.getElementById('selectedVacancyMessage');
+        const vacancyButtons = Array.from(document.querySelectorAll('.apply-btn'));
+
+        const setSelectionMessage = (message) => {
+            if (!selectedVacancyMessage) return;
+            selectedVacancyMessage.textContent = message || '';
+            selectedVacancyMessage.style.display = message ? 'block' : 'none';
+        };
+        setSelectionMessage('');
+
+        const syncAppliedState = () => {
+            const appliedCount = vacancyButtons.filter(button => button.classList.contains('applied')).length;
+            vacancyButtons.forEach(button => {
+                const isApplied = button.classList.contains('applied');
+                button.classList.toggle('applied', isApplied);
+                if (isApplied) {
+                    button.textContent = 'Applied';
+                    button.disabled = true;
+                    return;
+                }
+
+                button.disabled = appliedCount >= 2;
+                button.textContent = appliedCount >= 2 ? 'Limit reached' : 'Select vacancy';
+            });
+        };
+
+        fetch('/api/my-applications')
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load applications');
+                }
+                return response.json();
+            })
+            .then(applications => {
+                const appliedVacancyIds = new Set((applications || []).map(item => String(item.vacancyId)));
+                vacancyButtons.forEach(button => {
+                    const vacancyId = String(button.getAttribute('data-vacancy-id'));
+                    button.classList.toggle('applied', appliedVacancyIds.has(vacancyId));
+                });
+                syncAppliedState();
+            })
+            .catch(() => {
+                vacancyButtons.forEach(button => {
+                    button.classList.remove('applied');
+                    button.disabled = false;
+                    button.textContent = 'Select vacancy';
+                });
+            });
+
+        vacancyButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                if (button.classList.contains('applied')) {
+                    setSelectionMessage(`Applied to ${button.getAttribute('data-vacancy-code') || 'this vacancy'}.`);
+                    return;
+                }
+
+                const vacancyId = button.getAttribute('data-vacancy-id');
+                const vacancyCode = button.getAttribute('data-vacancy-code') || 'VAC-000';
+                if (!vacancyId) return;
+
+                const appliedCount = vacancyButtons.filter(item => item.classList.contains('applied')).length;
+                if (appliedCount >= 2) {
+                    setSelectionMessage('You can apply to a maximum of 2 vacancies.');
+                    return;
+                }
+
+                setSelectionMessage(`Selected ${vacancyCode}. Submitting your application...`);
+
+                try {
+                    const response = await fetch(`/api/vacancy-apply?vacancyId=${vacancyId}`, { method: 'POST' });
+                    const data = await response.json();
+                    if (data.status === 'ok') {
+                        button.classList.add('applied');
+                        button.disabled = true;
+                        button.textContent = 'Applied';
+                        setSelectionMessage(`Applied to ${data.vacancyCode || vacancyCode}.`);
+                        syncAppliedState();
+                    } else if (data.status === 'exists') {
+                        button.classList.add('applied');
+                        button.disabled = true;
+                        button.textContent = 'Applied';
+                        setSelectionMessage(data.message || `Already applied to ${vacancyCode}.`);
+                        syncAppliedState();
+                    } else {
+                        setSelectionMessage(data.message || `Could not apply for ${vacancyCode}.`);
+                    }
+                } catch (error) {
+                    setSelectionMessage('Could not submit your application right now.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

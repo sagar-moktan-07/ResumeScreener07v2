@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recent Applicants</title>
+    <style>
+        :root {
+            --bg: #03110e;
+            --panel: #112d29;
+            --panel-strong: #163a35;
+            --muted: #b1d0c4;
+            --text: #edf8f3;
+            --border: #234d47;
+            --primary: #114d41;
+            --danger: #ff6b6b;
+            --shadow-subtle: 0 12px 30px rgba(4, 15, 11, 0.5);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Inter, 'Segoe UI', system-ui, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        h1 { margin: 0; font-size: 1.4rem; }
+        .nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .button-link {
+            text-decoration: none;
+            color: var(--text);
+            background: var(--panel-strong);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        main { max-width: 1180px; margin: 28px auto; padding: 0 16px 40px; }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: var(--shadow-subtle);
+        }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        select, button {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #111d1a;
+            color: var(--text);
+        }
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, #196a5d 100%);
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .danger-btn {
+            background: rgba(255, 107, 107, 0.12);
+            border: 1px solid rgba(255, 107, 107, 0.38);
+            color: var(--danger);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        th, td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+        th { color: var(--muted); }
+        .empty {
+            color: var(--muted);
+            text-align: center;
+            padding: 18px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Recent applicants</h1>
+        <div class="nav">
+            <a class="button-link" href="/dashboard">Dashboard</a>
+            <a class="button-link" href="/admin/users">Manage users</a>
+            <a class="button-link" href="/admin/candidates">Candidates</a>
+            <a class="button-link" href="/admin/finalized">Finalized candidates</a>
+            <a class="button-link" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="card">
+            <div class="toolbar">
+                <h2 style="margin:0;">Applicant activity</h2>
+                <form method="get" th:action="@{/admin/recent-applicants}" style="display:flex; gap:8px; align-items:center; margin:0;">
+                    <select name="selectedVacancyId" aria-label="Filter applicants by vacancy">
+                        <option value="">All vacancies</option>
+                        <option th:each="vacancy : ${vacancies}" th:value="${vacancy.id}" th:text="${vacancy.vacancyCode != null ? vacancy.vacancyCode + ' - ' + vacancy.jobTitle : vacancy.jobTitle}" th:selected="${selectedVacancyId != null and selectedVacancyId == vacancy.id}">Vacancy</option>
+                    </select>
+                    <button type="submit">Show</button>
+                </form>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate ID</th>
+                        <th>Vacancy</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Skills</th>
+                        <th>Experience</th>
+                        <th>File</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="candidate : ${candidates}">
+                        <td th:text="${candidate.candidateCode}">CAN-0001</td>
+                        <td th:text="${candidate.vacancyCode + ' - ' + candidate.vacancyTitle}">VAC-001</td>
+                        <td th:text="${candidate.fullName}">Candidate</td>
+                        <td th:text="${candidate.email}">email@example.com</td>
+                        <td th:text="${candidate.phone}">0000000000</td>
+                        <td th:text="${candidate.skills}">skills</td>
+                        <td th:text="${candidate.experience}">experience</td>
+                        <td th:text="${candidate.fileName}">resume.pdf</td>
+                        <td>
+                            <form th:action="@{/admin/applications/{applicationId}/delete(applicationId=${candidate.applicationId})}" method="post" onsubmit="return confirm('Remove this applicant from this vacancy only?');">
+                                <input type="hidden" name="selectedVacancyId" th:value="${selectedVacancyId}" />
+                                <button type="submit" class="danger-btn">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(candidates)}">
+                        <td colspan="9" class="empty">No applicants found for this vacancy yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

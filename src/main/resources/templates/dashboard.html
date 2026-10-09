@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Screener Dashboard</title>
+    <style>
+        :root {
+            --bg: #03110e;
+            --panel: #112d29;
+            --panel-strong: #163a35;
+            --muted: #b1d0c4;
+            --text: #edf8f3;
+            --border: #234d47;
+            --primary: #114d41;
+            --primary-strong: #196a5d;
+            --primary-soft: #123c35;
+            --success: #42c58a;
+            --danger: #ff6b6b;
+            --input: #141818;
+            --radius: 12px;
+            --shadow-subtle: 0 12px 30px rgba(4, 15, 11, 0.5);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Inter, 'Segoe UI', system-ui, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: transparent;
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        h1 { margin:0; font-size:1.4rem; }
+
+        .logout { text-decoration:none; color:var(--text); background:var(--primary-soft); padding:8px 12px; border-radius:10px; border:1px solid var(--border); font-weight:700; }
+
+        main { max-width:1020px; margin:24px auto; padding:0 16px 40px; }
+
+        .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+        .stat-box { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:var(--shadow-subtle); }
+        .stat-box .label { color:var(--muted); font-size:0.8rem; text-transform:uppercase; }
+        .stat-box .value { margin-top:8px; font-weight:700; font-size:1.6rem; }
+
+        .grid { display:grid; grid-template-columns:1.1fr 0.9fr; gap:18px; }
+        .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow-subtle); }
+        .card > .dropzone { margin-top:4px; }
+        h2 { margin:0 0 12px; font-size:1.05rem; }
+
+        /* Simplified dropzone visuals */
+        .dropzone {
+            min-height:180px; border:1.5px dashed var(--border); border-radius:var(--radius);
+            background:linear-gradient(180deg,var(--panel-strong) 0%,var(--panel) 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:18px 16px; transition:box-shadow .18s ease, border-color .18s ease, transform .12s ease; cursor:pointer; text-align:center;
+            width:100%;
+        }
+
+        .dropzone.dragover, .dropzone:hover { border-color:var(--primary); box-shadow:0 8px 28px rgba(31, 107, 86, 0.18); transform:translateY(-2px); }
+        .dropzone strong { font-size:1rem; font-weight:700; }
+        .dropzone span { color:var(--muted); font-size:0.92rem; }
+        .dropzone input[type="file"] { display:none; }
+
+        .screening-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+        select, input, textarea { border:1px solid var(--border); border-radius:10px; padding:10px; background:var(--input); color:var(--text); }
+        textarea { min-height: 110px; resize: vertical; }
+
+        .vacancy-form {
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .vacancy-form label {
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            color:var(--muted);
+            font-weight:600;
+            font-size:0.9rem;
+        }
+        .vacancy-form input,
+        .vacancy-form textarea {
+            width:100%;
+        }
+
+        .button-row { display:flex; gap:10px; }
+        button, .secondary { border:0; border-radius:10px; padding:9px 14px; font-weight:700; cursor:pointer; }
+        button { background:linear-gradient(135deg,var(--primary) 0%,var(--primary-strong) 100%); color:#fff; box-shadow:0 8px 18px rgba(31,107,86,0.25); }
+        .secondary { background:var(--panel-strong); color:var(--text); border:1px solid var(--border); box-shadow:none; }
+
+        .status { min-height:22px; color:var(--muted); font-size:0.92rem; margin-top:8px; }
+        .message { margin-bottom:14px; padding:10px 12px; border-radius:10px; background:#ebfaf3; border:1px solid #bfead0; color:var(--success); font-weight:600; }
+
+        table { width:100%; border-collapse:collapse; font-size:13.5px; }
+        th, td { padding:10px 8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+        th { color:var(--muted); font-weight:600; }
+        tbody tr:hover { background: rgba(17, 77, 65, 0.2); }
+
+        @media (max-width:900px) { .grid { grid-template-columns:1fr; } .stats { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Resume Screener</h1>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <a th:if="${isAdmin}" class="logout" href="/admin/users">Users</a>
+            <a th:if="${isAdmin}" class="logout" href="/admin/candidates">Candidates</a>
+            <a th:if="${isAdmin}" class="logout" href="/admin/finalized">Finalized</a>
+            <a class="logout" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <div th:if="${message}" class="message" th:text="${message}">Action completed.</div>
+
+        <div th:unless="${isAdmin}" class="card" style="margin-bottom: 18px;">
+            <h2>Candidate portal</h2>
+            <p style="margin: 0 0 12px; color: var(--muted);">Upload your PDF resume to parse your information and review your candidate record instantly.</p>
+            <div class="dropzone">
+                <strong>Drag &amp; drop your PDF resume here</strong>
+                <span>PDF only · details will be extracted automatically</span>
+                <input type="file" id="files" accept="application/pdf" multiple>
+                <div class="button-row">
+                    <button type="button" id="uploadBtn">Upload &amp; Parse</button>
+                </div>
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+
+        <div th:if="${isAdmin}" class="stats">
+            <div class="stat-box">
+                <div class="label">Active vacancies</div>
+                <div class="value" th:text="${#lists.size(vacancies)}">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Uploaded resumes</div>
+                <div class="value" th:text="${#lists.size(candidates)}">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Screening status</div>
+                <div class="value">Ready</div>
+            </div>
+        </div>
+
+        <div th:if="${isAdmin}" class="grid">
+            <section class="card">
+                <h2>Upload resumes</h2>
+                <div class="dropzone">
+                    <strong>Drag &amp; drop PDF resumes here</strong>
+                    <span>PDF files only</span>
+                    <input type="file" id="files" accept="application/pdf" multiple>
+                    <div class="button-row">
+                        <button type="button" id="uploadBtn">Upload &amp; Extract</button>
+                    </div>
+                    <div id="status" class="status"></div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Create vacancy</h2>
+                <form class="vacancy-form" th:action="@{/vacancies}" th:object="${vacancy}" method="post">
+                    <label>
+                        <span>Job title</span>
+                        <input th:field="*{jobTitle}" placeholder="Senior Java Developer" required>
+                    </label>
+                    <label>
+                        <span>Department</span>
+                        <input th:field="*{department}" placeholder="Engineering">
+                    </label>
+                    <label>
+                        <span>Job description</span>
+                        <textarea th:field="*{jobDescription}" placeholder="Describe the role..."></textarea>
+                    </label>
+                    <label>
+                        <span>Required skills</span>
+                        <textarea th:field="*{requiredSkills}" placeholder="Java, Spring Boot, PostgreSQL"></textarea>
+                    </label>
+                    <button type="submit">Save vacancy</button>
+                </form>
+            </section>
+        </div>
+
+        <div th:if="${isAdmin}" class="card" style="margin-top: 24px;">
+            <h2>Screening results</h2>
+            <div class="screening-row">
+                <select id="vacancySelect" aria-label="Choose vacancy">
+                    <option value="">Select a vacancy</option>
+                    <option th:each="vacancy : ${vacancies}" th:value="${vacancy.id}" th:text="${vacancy.vacancyCode != null ? vacancy.vacancyCode + ' - ' + vacancy.jobTitle : vacancy.jobTitle}">Vacancy</option>
+                </select>
+                <button id="runScreeningBtn" type="button">Run screening</button>
+            </div>
+            <div id="screeningStatus" class="status">No screening run yet.</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Email</th>
+                        <th>Score</th>
+                        <th>Match %</th>
+                    </tr>
+                </thead>
+                <tbody id="screeningResultsBody">
+                    <tr>
+                        <td colspan="4" style="color: var(--muted);">No results to display.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:unless="${isAdmin}" class="card" style="margin-top: 24px;">
+            <h2>My parsed candidate information</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Skills</th>
+                        <th>Qualifications</th>
+                        <th>Experience</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="candidate : ${myCandidates}">
+                        <td th:text="${candidate.displayCode}">CAN-0001</td>
+                        <td th:text="${candidate.fullName} ?: 'Not parsed yet'">Candidate</td>
+                        <td th:text="${candidate.email} ?: '-'">email@example.com</td>
+                        <td th:text="${candidate.phone} ?: '-'">0000000000</td>
+                        <td th:text="${candidate.skills} ?: 'Not available'">skills</td>
+                        <td th:text="${candidate.qualifications} ?: 'Not available'">qualifications</td>
+                        <td th:text="${candidate.experience} ?: 'Not available'">experience</td>
+                        <td th:text="${candidate.fileName} ?: '-'">resume.pdf</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script>
+        const fileInput = document.getElementById('files');
+        const dropzone = document.querySelector('.dropzone');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const runScreeningBtn = document.getElementById('runScreeningBtn');
+        const vacancySelect = document.getElementById('vacancySelect');
+        const screeningStatus = document.getElementById('screeningStatus');
+        const screeningResultsBody = document.getElementById('screeningResultsBody');
+
+        function renderScreeningResults(results) {
+            if (!screeningResultsBody) return;
+            if (!results || !results.length) {
+                screeningResultsBody.innerHTML = '<tr><td colspan="4" style="color: var(--muted);">No results to display.</td></tr>';
+                return;
+            }
+
+            screeningResultsBody.innerHTML = results.map(item => `
+                <tr>
+                    <td>${item.candidate_name || item.candidate_id || 'Unknown'}</td>
+                    <td>${item.email || '-'}</td>
+                    <td>${Number(item.score || 0).toFixed(2)}</td>
+                    <td>${item.match_percentage || 0}%</td>
+                </tr>
+            `).join('');
+        }
+
+        if (dropzone && fileInput) {
+            dropzone.addEventListener('click', (event) => {
+                if (event.target !== uploadBtn && !uploadBtn.contains(event.target)) {
+                    fileInput.click();
+                }
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'dragend'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.remove('dragover');
+                });
+            });
+
+            dropzone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.remove('dragover');
+                const droppedFiles = event.dataTransfer?.files || [];
+                if (droppedFiles.length) {
+                    const dataTransfer = new DataTransfer();
+                    Array.from(droppedFiles).forEach(file => dataTransfer.items.add(file));
+                    fileInput.files = dataTransfer.files;
+                }
+            });
+        }
+
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', async () => {
+                const files = fileInput.files;
+                const statusEl = document.getElementById('status');
+
+                if (!files.length) {
+                    statusEl.textContent = 'Please choose at least one PDF file.';
+                    return;
+                }
+
+                const formData = new FormData();
+                Array.from(files).forEach(file => formData.append('files', file));
+
+                statusEl.textContent = 'Uploading...';
+                try {
+                    const response = await fetch('/api/resumes/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Upload failed');
+                    }
+
+                    const data = await response.json();
+                    const uploaded = Array.isArray(data.uploaded) ? data.uploaded.length : (typeof data.stored === 'number' ? data.stored : 0);
+                    const failed = typeof data.failed === 'number' ? data.failed : 0;
+                    const message = data.message || `Upload complete. ${uploaded} resume(s) processed.`;
+                    statusEl.textContent = `${message}${failed ? ` (${failed} failed)` : ''}`;
+                    window.location.reload();
+                } catch (error) {
+                    statusEl.textContent = 'Upload failed. Please check the file and try again.';
+                }
+            });
+        }
+
+        if (runScreeningBtn && vacancySelect) {
+            runScreeningBtn.addEventListener('click', async () => {
+                const vacancyId = vacancySelect.value;
+                if (!vacancyId) {
+                    screeningStatus.textContent = 'Please select a vacancy first.';
+                    return;
+                }
+
+                screeningStatus.textContent = 'Running screening...';
+                try {
+                    const response = await fetch(`/api/screening/run?vacancyId=${vacancyId}`, { method: 'POST' });
+                    if (!response.ok) {
+                        throw new Error('Screening request failed');
+                    }
+
+                    const data = await response.json();
+                    const results = Array.isArray(data.results) ? data.results : [];
+                    const topCandidates = Array.isArray(data.top_candidates) ? data.top_candidates : results;
+                    renderScreeningResults(topCandidates);
+                    screeningStatus.textContent = `${results.length} candidate(s) evaluated for vacancy ${vacancyId}.`;
+                } catch (error) {
+                    screeningStatus.textContent = 'Screening failed. Please try again.';
+                    renderScreeningResults([]);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
