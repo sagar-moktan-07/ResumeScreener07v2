@@ -53,7 +53,7 @@ public class CandidateResume {
 
     @PrePersist
     @PreUpdate
-    private void ensureCode() {
+    private void ensureCcode() {
         if (candidateCode == null || candidateCode.trim().isEmpty()) {
             Long sourceId = userId != null ? userId : id;
             if (sourceId != null) {

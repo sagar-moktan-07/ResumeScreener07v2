@@ -1,0 +1,7 @@
+com/example/aiservice/EmbeddingService.class
+com/example/aiservice/RerankerService.class
+com/example/aiservice/SemanticSearchService.class
+com/example/aiservice/OllamaService.class
+com/example/aiservice/AiServiceApplication.class
+com/example/aiservice/AiController.class
+com/example/aiservice/DatabaseService.class
